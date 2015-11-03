@@ -1,0 +1,4 @@
+wheel==0.23.0
+versioneer==0.15
+future==0.15.0
+tox==2.1.1
