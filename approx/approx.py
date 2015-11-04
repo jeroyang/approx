@@ -4,8 +4,6 @@
 from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
 from builtins import *
-import json
-import sys
 from random import choice
 
 def direct_print(text):
@@ -109,9 +107,9 @@ def generate_question(recipe, *args):
     question, answer = question_fucntion(*randomized_args)
     return question, answer
 
-def play_question(question, answer, precision, print_method):
+def play_question(question, answer, precision, print_method, input_func):
     while True:
-        users_response = input(question)
+        users_response = input_func(question)
         try:
             users_answer = float(users_response)
         except:

@@ -105,6 +105,24 @@ class TestApprox(unittest.TestCase):
         wanted = ('1 + 3 = ', 4)
         self.assertEqual(result, wanted)
 
+    def test_play_question(self):
+        question = 'anything question'
+        answer = 15
+        precision = 0
+        out = []
+        def print_method(text):
+            out.append(text)
+
+        input_sequence = iter(['13', '15'])
+        def input_func(text):
+            return next(input_sequence)
+
+        result = approx.play_question(
+            question, answer, precision, print_method, input_func)
+        wanted = True
+        self.assertEqual(result, wanted)
+        self.assertEqual(out, ['太少了，再多一點！', '太棒了，答案就是 15！'])
+
 class TestApproxGame(unittest.TestCase):
 
     def setUp(self):
