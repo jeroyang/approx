@@ -52,6 +52,20 @@ class TestApprox(unittest.TestCase):
         self.assertEqual(question, wanted_question)
         self.assertEqual(answer, wanted_answer)
 
+    def test_question_highest_digit(self):
+        args = ('15 + 16 = ', 31)
+        question, answer = approx.question_highest_digit(*args)
+        wanted_question = '15 + 16 = ▢1，其中▢應填入什麼數字？'
+        wanted_answer = 3
+        self.assertEqual(question, wanted_question)
+        self.assertEqual(answer, wanted_answer)
+        args = ('300 - 120 = ', 180)
+        question, answer = approx.question_highest_digit(*args)
+        wanted_question = '300 - 120 = ▢80，其中▢應填入什麼數字？'
+        wanted_answer = 1
+        self.assertEqual(question, wanted_question)
+        self.assertEqual(answer, wanted_answer)
+
     def test_is_correct(self):
         correctness = approx.is_correct(800, 1000, 100)
         self.assertEqual(correctness, False)
@@ -63,8 +77,9 @@ class TestApprox(unittest.TestCase):
         self.assertEqual(correctness, False)
 
     def test_new_level_greet(self):
-        result = approx.new_level_greet(11)
-        wanted = '=======\n第 11 關\n======='
+        result = approx.new_level_greet(11, 0)
+        bar = '=' * 20
+        wanted = '\n'.join([bar, '第 11 關 (容許誤差：0)', bar])
         self.assertEqual(result, wanted)
 
     def test_correct_greet(self):
@@ -85,16 +100,8 @@ class TestApprox(unittest.TestCase):
         wanted = '太少了，再多一點！'
         self.assertEqual(result, wanted)
 
-    def test_generate_range(self):
-        result = approx.generate_range('d1')
-        wanted = range(0, 10)
-        self.assertEqual(result, wanted)
-        result = approx.generate_range(10)
-        wanted = [10]
-        self.assertEqual(result, wanted)
-
     def test_generate_question(self):
-        result = approx.generate_question('add', (1, 3), 'all_pass')
+        result = approx.generate_question('add', 1, 3)
         wanted = ('1 + 3 = ', 4)
         self.assertEqual(result, wanted)
 

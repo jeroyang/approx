@@ -41,13 +41,31 @@ def question_divide(arg1, wanted_answer):
     answer = wanted_answer
     return (question, answer)
 
+def question_highest_digit(original_question, original_answer):
+    blocked_answer = '▢' + str(original_answer)[1:]
+    question = ''.join([
+        original_question,
+        blocked_answer,
+        '，其中▢應填入什麼數字？',
+        ])
+    answer = int(str(original_answer)[0])
+    return (question, answer)
+
+def question_highest_wrapper(recipe, *args):
+    original = generate_question(recipe, *args)
+    question, answer = question_highest_digit(*original)
+    return (question, answer)
+
 def is_correct(users_answer, answer, precision):
     delta = abs(users_answer - answer)
     
     return delta <= precision
 
-def new_level_greet(level_id):
-    return '=======\n第 {} 關\n======='.format(level_id)
+def new_level_greet(level_id, precision):
+    template = '第 {} 關 (容許誤差：{})'
+    greet = template.format(level_id, precision)
+    bar = '=' * 20
+    return '\n'.join([bar, greet, bar])
 
 def correct_greet(answer, users_answer):
     if answer == users_answer:
@@ -67,41 +85,28 @@ RECIPE_MAP = {
     'add': question_add,
     'sub': question_sub,
     'multiply': question_multiply,
-    'division': question_divide,
+    'divide': question_divide,
+    'highest': question_highest_wrapper,
 }
 
-QUESTION_RANGE_MAP = {
-    'd1': range(0, 10),
-    'd2': range(1, 100),
-    'd3': range(10, 1000),
-}
-
-ANSWER_FILTER_MAP = {
-    'all_pass': lambda n: True,
-}
-
-def generate_range(range_key):
-    real_range = QUESTION_RANGE_MAP.get(range_key, None)
-    if real_range is None:
-        return [int(range_key)]
-    else:
-        return real_range
-
-def generate_question(question_recipe, r_args, a_range, *args):
+def random_from_range(*args):
     """
-    The question_recipe are function names in the RECIPE_MAP,
+    Return corresponding args, choose one number from given range
+    """
+    for arg in args:
+        if isinstance(arg, range):
+            yield choice(arg)
+        else: 
+            yield arg
+
+def generate_question(recipe, *args):
+    """
+    The recipe is a key in the RECIPE_MAP,
 
     """
-    question_fucntion = RECIPE_MAP[question_recipe]
-    is_valid = ANSWER_FILTER_MAP[a_range]
-    function_args = [choice(generate_range(arg)) for arg in r_args]
-    for i in range(10):
-        question, answer = question_fucntion(*function_args)
-        if is_valid(answer):
-            break
-    else:
-        raise ValueError('The recipe setting may be wrong.')
-
+    question_fucntion = RECIPE_MAP[recipe]
+    randomized_args = random_from_range(*args)
+    question, answer = question_fucntion(*randomized_args)
     return question, answer
 
 def play_question(question, answer, precision, print_method):
@@ -127,28 +132,32 @@ class ApproxGame(object):
     """
     def __init__(self):
         levels = {
-        # id, recipe, r_args, answer_range, precision, next level
-        1: ('guess', ('d2', 0, 99), 'all_pass', 0, 2), 
-        2: ('add', ('d1', 'd1'), 'all_pass', 0, 3),
-        3: ('sub', ('d1', 'd1'), 'all_pass', 0, 4),
-        4: ('add', ('d2', 'd1'), 'all_pass', 1, 5),
-        5: ('sub', ('d2', 'd2'), 'all_pass', 1, 6),
-        6: ('multiply', ('d1', 'd1'), 'all_pass', 0, 7),
-        7: ('multiply', ('d2', 'd1'), 'all_pass', 10, 8),
-        8: ('multiply', ('d3', 'd1'), 'all_pass', 20, 9),
-        9: ('multiply', ('d2', 'd2'), 'all_pass', 100, 1),
+        # id: (next_level, precision, round_count, recipe, *args)
+        0: (1, 0, 3, 'guess', range(0, 100), 0, 100),
+        1: (2, 0, 10, 'add', range(1, 10), range(0, 10)),
+        2: (3, 0, 10, 'sub', range(1, 10), range(0, 10)),
+        3: (4, 10, 10, 'add', range(1, 100), range(0, 100)),
+        4: (5, 10, 10, 'sub', range(1, 100), range(0, 100)),
+        5: (6, 0, 10, 'highest', 'multiply', 
+                    range(10, 99), range(1, 10)),
+        6: (7, 0, 10, 'multiply', range(1, 9), range(0, 9)),
+        7: (8, 10, 10, 'multiply', range(10, 99), range(0, 9)),
+        8: (9, 50, 10, 'multiply', range(100, 999), range(1, 9)),
+        9: (10, 100, 5, 'multiply', range(10, 99), range(10, 99)),
+        10: (11, 0, 10, 'divide', range(1, 9), range(2, 9)),
+        11: (3, 10, 2, 'divide', range(10, 99), range(2, 9)),
         }
 
         self._levels = levels
         
     def play_level(self, level_id, print_method):
         level = self._levels[level_id]
-        precision = level[3]
-        next_level = level[4]
-        print_method(new_level_greet(level_id))
+        next_level, precision, round_count = level[0:3]
+        recipe_args = level[3:]
+        print_method(new_level_greet(level_id, precision))
         counter = 0
-        while counter < 2:
-            question, answer = generate_question(*level)
+        while counter <= round_count:
+            question, answer = generate_question(*recipe_args)
             correctness = play_question(question, answer, 
                                         precision, direct_print)
             if correctness:
