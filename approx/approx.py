@@ -148,7 +148,7 @@ class ApproxGame(object):
 
         self._levels = levels
         
-    def play_level(self, level_id, print_method):
+    def play_level(self, level_id, print_method, input_func):
         level = self._levels[level_id]
         next_level, precision, round_count = level[0:3]
         recipe_args = level[3:]
@@ -157,7 +157,7 @@ class ApproxGame(object):
         while counter <= round_count:
             question, answer = generate_question(*recipe_args)
             correctness = play_question(question, answer, 
-                                        precision, direct_print)
+                        precision, direct_print, input_func)
             if correctness:
                 counter += 1
             else:
@@ -168,7 +168,7 @@ class ApproxGame(object):
     def run(self):
         level_id = 1
         while True:
-            level_id = self.play_level(level_id, direct_print)
+            level_id = self.play_level(level_id, direct_print, input)
             if level_id is None:
                 direct_print('=======\n遊戲結束\n=======')
                 break
