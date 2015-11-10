@@ -27,6 +27,15 @@ def question_sub(arg1, wanted_answer):
     answer = wanted_answer
     return (question, answer)
 
+def question_sub_fixed(arg1, arg2):
+    """
+    Given arg1 and arg2 return the question of "arg1 - arg2 = "
+    """
+    template = '{0} - {1} = '
+    question = template.format(arg1, arg2)
+    answer = arg1 - arg2
+    return (question, answer)
+
 def question_multiply(arg1, arg2):
     template = '{0} × {1} = '
     question = template.format(arg1, arg2)
@@ -82,6 +91,7 @@ RECIPE_MAP = {
     'guess': question_guess,
     'add': question_add,
     'sub': question_sub,
+    'subf': question_sub_fixed,
     'multiply': question_multiply,
     'divide': question_divide,
     'highest': question_highest_wrapper,
@@ -113,7 +123,11 @@ def play_question(question, answer, precision, print_method, input_func):
         try:
             users_answer = float(users_response)
         except:
-            return False 
+            confirmed = confirm_exit(input_func)
+            if confirmed:
+                return False
+            else:
+                continue
         
         if is_correct(users_answer, answer, precision):
             print_method(correct_greet(answer, users_answer))
@@ -124,6 +138,13 @@ def play_question(question, answer, precision, print_method, input_func):
         else: #users_answer < answer
             print_method(too_low_hint())
 
+def confirm_exit(input_func):
+    answer = input_func("確認結束遊戲？(是請按1；其他鍵表示否)")
+    if answer == '1':
+        return True
+    else:
+        return False
+
 class ApproxGame(object):
     """
     Game for mental mathmatics in approximate numbers
@@ -131,19 +152,26 @@ class ApproxGame(object):
     def __init__(self):
         levels = {
         # id: (next_level, precision, round_count, recipe, *args)
-        0: (1, 0, 3, 'guess', range(0, 100), 0, 100),
-        1: (2, 0, 10, 'add', range(1, 10), range(0, 10)),
-        2: (3, 0, 10, 'sub', range(1, 10), range(0, 10)),
-        3: (4, 10, 10, 'add', range(1, 100), range(0, 100)),
-        4: (5, 10, 10, 'sub', range(1, 100), range(0, 100)),
-        5: (6, 0, 10, 'highest', 'multiply', 
+        1: (2, 0, 1, 'guess', range(0, 100), 0, 100),
+        2: (3, 0, 10, 'add', range(1, 10), range(0, 10)),
+        6: (7, 0, 10, 'sub', range(1, 10), range(0, 10)),
+        4: (5, 0, 5, 'add', 10, range(1, 10)),
+        5: (6, 0, 10, 'add', range(10, 100, 10), range(1, 10)),
+        3: (4, 0, 5, 'subf', 9, range(1, 10)),
+        7: (8, 0, 10, 'subf', 99, range(11, 100)),
+        8: (9, 0, 10, 'add', range(100, 1000, 100), range(10, 100, 10)),
+        9: (10, 0, 10, 'add', range(100, 1000, 100), range(10, 100)),
+        10: (11, 0, 10, 'subf', 999, range(100, 1000)),
+        11: (12, 10, 10, 'add', range(1, 100), range(0, 100)),
+        12: (13, 10, 10, 'sub', range(1, 100), range(0, 100)),
+        13: (14, 0, 10, 'highest', 'multiply', 
                     range(10, 99), range(1, 10)),
-        6: (7, 0, 10, 'multiply', range(1, 9), range(0, 9)),
-        7: (8, 10, 10, 'multiply', range(10, 99), range(0, 9)),
-        8: (9, 50, 10, 'multiply', range(100, 999), range(1, 9)),
-        9: (10, 100, 5, 'multiply', range(10, 99), range(10, 99)),
-        10: (11, 0, 10, 'divide', range(1, 9), range(2, 9)),
-        11: (3, 10, 2, 'divide', range(10, 99), range(2, 9)),
+        14: (15, 0, 10, 'multiply', range(1, 9), range(0, 9)),
+        15: (16, 10, 10, 'multiply', range(10, 99), range(0, 9)),
+        16: (17, 50, 10, 'multiply', range(100, 999), range(1, 9)),
+        17: (18, 100, 5, 'multiply', range(10, 99), range(10, 99)),
+        18: (19, 0, 10, 'divide', range(1, 9), range(2, 9)),
+        19: (1, 10, 2, 'divide', range(10, 99), range(2, 9)),
         }
 
         self._levels = levels
@@ -154,7 +182,7 @@ class ApproxGame(object):
         recipe_args = level[3:]
         print_method(new_level_greet(level_id, precision))
         counter = 0
-        while counter <= round_count:
+        while counter < round_count:
             question, answer = generate_question(*recipe_args)
             correctness = play_question(question, answer, 
                         precision, direct_print, input_func)
@@ -164,13 +192,12 @@ class ApproxGame(object):
                 return None
         else: 
             return next_level
-    
-    def run(self):
-        level_id = 1
+
+    def run(self, level_id=1):
         while True:
             level_id = self.play_level(level_id, direct_print, input)
             if level_id is None:
-                direct_print('=======\n遊戲結束\n=======')
+                direct_print("=======\n遊戲結束\n=======\n")
                 break
 
 if __name__ == '__main__':

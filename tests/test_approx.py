@@ -123,6 +123,12 @@ class TestApprox(unittest.TestCase):
         self.assertEqual(result, wanted)
         self.assertEqual(out, ['太少了，再多一點！', '太棒了，答案就是 15！'])
 
+    def test_confirm_exit(self):
+        result = approx.confirm_exit(lambda x: '1')
+        self.assertTrue(result)
+        result = approx.confirm_exit(lambda x: 'd')
+        self.assertFalse(result)
+
 class TestApproxGame(unittest.TestCase):
 
     def setUp(self):
