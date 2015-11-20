@@ -4,7 +4,10 @@
 from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
 from builtins import *
-from random import choice
+
+from random import choice, sample
+from itertools import product
+
 
 def direct_print(text):
     print(text, flush=True)
@@ -112,10 +115,27 @@ def generate_question(recipe, *args):
     The recipe is a key in the RECIPE_MAP,
 
     """
-    question_fucntion = RECIPE_MAP[recipe]
+    question_function = RECIPE_MAP[recipe]
     randomized_args = random_from_range(*args)
-    question, answer = question_fucntion(*randomized_args)
+    question, answer = question_function(*randomized_args)
     return question, answer
+
+def generate_question_list(recipe, *args):
+    
+    question_function = RECIPE_MAP[recipe]
+
+    new_args = []
+    for arg in args:
+        if not isinstance(arg, range):
+            new_args.append([arg])
+        else:
+            new_args.append(arg)
+    
+    question_list = []
+    for arg_tuple in product(*new_args):
+        question, answer = question_function(*arg_tuple)
+        question_list.append((question, answer))
+    return question_list
 
 def play_question(question, answer, precision, print_method, input_func):
     while True:
@@ -154,10 +174,10 @@ class ApproxGame(object):
         # id: (next_level, precision, round_count, recipe, *args)
         1: (2, 0, 1, 'guess', range(0, 100), 0, 100),
         2: (3, 0, 10, 'add', range(1, 10), range(0, 10)),
-        6: (7, 0, 10, 'sub', range(1, 10), range(0, 10)),
-        4: (5, 0, 5, 'add', 10, range(1, 10)),
-        5: (6, 0, 10, 'add', range(10, 100, 10), range(1, 10)),
         3: (4, 0, 5, 'subf', 9, range(1, 10)),
+        4: (5, 0, 5, 'add', 10, range(1, 10)),
+        6: (7, 0, 10, 'add', range(10, 100, 10), range(1, 10)),
+        5: (6, 0, 10, 'sub', range(1, 10), range(0, 10)),
         7: (8, 5, 10, 'subf', 99, range(11, 100)),
         8: (9, 0, 10, 'add', range(100, 1000, 100), range(10, 100, 10)),
         9: (10, 0, 10, 'add', range(100, 1000, 100), range(10, 100)),
@@ -181,17 +201,14 @@ class ApproxGame(object):
         next_level, precision, round_count = level[0:3]
         recipe_args = level[3:]
         print_method(new_level_greet(level_id, precision))
-        counter = 0
-        while counter < round_count:
-            question, answer = generate_question(*recipe_args)
+        question_list = generate_question_list(*recipe_args)
+
+        for question, answer in sample(question_list, round_count):
             correctness = play_question(question, answer, 
                         precision, direct_print, input_func)
-            if correctness:
-                counter += 1
-            else:
-                return None
-        else: 
-            return next_level
+            if not correctness: # stop game
+                return None    
+        return next_level
 
     def run(self, level_id=1):
         while True:

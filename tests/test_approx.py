@@ -105,6 +105,16 @@ class TestApprox(unittest.TestCase):
         wanted = ('1 + 3 = ', 4)
         self.assertEqual(result, wanted)
 
+    def test_generate_question_list(self):
+        result = approx.generate_question_list('add', range(2), range(3))
+        wanted = [('0 + 0 = ', 0),
+                  ('0 + 1 = ', 1),
+                  ('0 + 2 = ', 2),
+                  ('1 + 0 = ', 1),
+                  ('1 + 1 = ', 2),
+                  ('1 + 2 = ', 3)]
+        self.assertEqual(result, wanted)
+
     def test_play_question(self):
         question = 'anything question'
         answer = 15
