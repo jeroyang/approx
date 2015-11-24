@@ -100,11 +100,6 @@ class TestApprox(unittest.TestCase):
         wanted = '太少了，再多一點！'
         self.assertEqual(result, wanted)
 
-    def test_generate_question(self):
-        result = approx.generate_question('add', 1, 3)
-        wanted = ('1 + 3 = ', 4)
-        self.assertEqual(result, wanted)
-
     def test_generate_question_list(self):
         result = approx.generate_question_list('add', range(2), range(3))
         wanted = [('0 + 0 = ', 0),

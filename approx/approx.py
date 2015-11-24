@@ -100,26 +100,6 @@ RECIPE_MAP = {
     'highest': question_highest_wrapper,
 }
 
-def random_from_range(*args):
-    """
-    Return corresponding args, choose one number from given range
-    """
-    for arg in args:
-        if isinstance(arg, range):
-            yield choice(arg)
-        else: 
-            yield arg
-
-def generate_question(recipe, *args):
-    """
-    The recipe is a key in the RECIPE_MAP,
-
-    """
-    question_function = RECIPE_MAP[recipe]
-    randomized_args = random_from_range(*args)
-    question, answer = question_function(*randomized_args)
-    return question, answer
-
 def generate_question_list(recipe, *args):
     
     question_function = RECIPE_MAP[recipe]
